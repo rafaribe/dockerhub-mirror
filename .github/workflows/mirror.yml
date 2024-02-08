@@ -4,13 +4,11 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "0 0 * * *"
-  push:
 
 jobs:
   mirror:
     name: Mirror
     runs-on: ubuntu-latest
-    continue-on-error: true
     strategy:
       matrix:
         include:
@@ -34,8 +32,6 @@ jobs:
             repo: docker.io
           - image: rust
             repo: docker.io
-          - image: ubuntu
-            repo: docker.io
     permissions:
       contents: read
       packages: write
@@ -50,24 +46,8 @@ jobs:
       - uses: imjasonh/setup-crane@v0.3
       - name: Mirror
         run: |
-          copied_tags=""
-          failed_tags=""
-          for tag in $(crane ls ${{ matrix.repo }}/${{ matrix.image }}); do
-            if crane validate --remote ${{ matrix.image }}:$tag; then
-              echo "Tag $tag is valid, mirroring..."
-              if crane copy ${{ matrix.repo }}/${{ matrix.image }}:$tag ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:$tag; then
-                echo "Successfully mirrored tag: $tag"
-                copied_tags="$copied_tags $tag"
-              else
-                echo "Failed to mirror tag: $tag"
-                failed_tags="$failed_tags $tag"
-              fi
-            else
-              echo "Skipping invalid tag: $tag"
-              failed_tags="$failed_tags $tag"
-            fi
+          for tag in $(cat ./images/${{ matrix.image }}); do
+            crane copy \
+              ${{ matrix.repo }}/${{ matrix.image }}:$tag \
+              ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:$tag
           done
-
-          # Output copied tags and failed tags
-          echo "Copied tags: $copied_tags"
-            echo "Failed tags: $failed_tags"
