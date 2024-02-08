@@ -1,6 +1,7 @@
 name: Update Image Versions
 
 on:
+  workflow_dispatch:
   schedule:
     - cron: "50 23 * * *" # Run daily
 
