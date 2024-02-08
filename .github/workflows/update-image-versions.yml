@@ -10,6 +10,14 @@ jobs:
     name: Update Versions
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ github.token }}
+      - uses: actions/setup-go@v5
+      - uses: imjasonh/setup-crane@v0.3
       - name: Check for newer versions and update files
         run: |
           # Loop through each image file
