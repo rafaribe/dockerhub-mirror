@@ -16,42 +16,58 @@ jobs:
         include:
           - image: alpine
             repo: docker.io
+            excluded_tags: "2.6|latest"
           - image: busybox
             repo: docker.io
+            excluded_tags: "2.6|latest"
           - image: debian
             repo: docker.io
+            excluded_tags: "2.6|latest"
           - image: golang
             repo: docker.io
+            excluded_tags: "latest"
           - image: mysql
             repo: docker.io
+            excluded_tags: "latest"
           - image: node
             repo: docker.io
+            excluded_tags: "latest"
           - image: openjdk
             repo: docker.io
+            excluded_tags: "latest"
           - image: postgres
             repo: docker.io
+            excluded_tags: "latest"
           - image: python
             repo: docker.io
+            excluded_tags: "latest"
           - image: rust
             repo: docker.io
+            excluded_tags: "latest"
           - image: ubuntu
             repo: docker.io
+            excluded_tags: "latest"
     permissions:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ github.token }}
-      - uses: actions/setup-go@v5
-      - uses: imjasonh/setup-crane@v0.3
       - name: Mirror
         run: |
-          for tag in $(crane ls ${{ matrix.repo }}/${{ matrix.image }}); do
-            crane copy \
-              ${{ matrix.repo }}/${{ matrix.image }}:$tag \
-              ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:$tag
+          invalid_tags=""
+          excluded_tags=$(echo "${{ matrix.excluded_tags }}" | tr "|" " ")
+          for tag in $(crane ls ${{ matrix.repo }}/${{ matrix.image }} | grep -Ev "$excluded_tags"); do
+            if ! crane validate --remote ${{ matrix.image }}:$tag; then
+              echo "Invalid tag: $tag"
+              invalid_tags="$invalid_tags $tag"
+            fi
           done
+
+          # Loop through each image
+          for tag in $(crane ls ${{ matrix.repo }}/${{ matrix.image }} | grep -Ev "$invalid_tags|$excluded_tags"); do
+            if crane copy ${{ matrix.repo }}/${{ matrix.image }}:$tag ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:$tag; then
+              echo "Successfully mirrored tag: $tag"
+            else
+              echo "Skipping tag $tag due to error: Invalid manifest type"
+            fi
+          done
+          echo "Invalid tags: $invalid_tags"
