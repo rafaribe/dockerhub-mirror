@@ -18,6 +18,11 @@ jobs:
           password: ${{ github.token }}
       - uses: actions/setup-go@v5
       - uses: imjasonh/setup-crane@v0.3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+      - run: npm install -g semver
       - name: Check for newer versions and update files
         run: |
           # Loop through each image file
