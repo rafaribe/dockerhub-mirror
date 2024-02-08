@@ -3,7 +3,7 @@ name: Mirror Dockerhub
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 0 * * *'
+    - cron: "0 0 * * *"
 
 jobs:
   mirror:
@@ -46,7 +46,7 @@ jobs:
       - uses: imjasonh/setup-crane@v0.3
       - name: Mirror
         run: |
-          for tag in $(cat ./images/${{ matrix.image }}); do
+          for tag in $(crane tags ${{ matrix.image }}); do
             crane copy \
               ${{ matrix.repo }}/${{ matrix.image }}:$tag \
               ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:$tag
