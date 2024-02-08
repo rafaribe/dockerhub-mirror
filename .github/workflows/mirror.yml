@@ -4,6 +4,7 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "0 0 * * *"
+  push:
 
 jobs:
   mirror:
@@ -33,6 +34,8 @@ jobs:
             repo: docker.io
           - image: rust
             repo: docker.io
+          - image: ubuntu
+          repo: docker.io
     permissions:
       contents: read
       packages: write
@@ -47,7 +50,7 @@ jobs:
       - uses: imjasonh/setup-crane@v0.3
       - name: Mirror
         run: |
-          for tag in $(crane tags ${{ matrix.image }}); do
+          for tag in $(crane tag ${{ matrix.repo }}/${{ matrix.image }}); do
             crane copy \
               ${{ matrix.repo }}/${{ matrix.image }}:$tag \
               ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:$tag
