@@ -35,7 +35,7 @@ jobs:
           - image: rust
             repo: docker.io
           - image: ubuntu
-          repo: docker.io
+            repo: docker.io
     permissions:
       contents: read
       packages: write
