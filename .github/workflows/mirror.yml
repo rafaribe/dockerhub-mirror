@@ -45,10 +45,12 @@ jobs:
           password: ${{ github.token }}
       - uses: actions/setup-go@v5
       - uses: imjasonh/setup-crane@v0.3
-      - name: Mirror
+      - name: Fetch tags and mirror
         run: |
-          for tag in $(cat ./scripts/${{ matrix.image }}.sh); do
-            crane copy \
-              ${{ matrix.repo }}/${{ matrix.image }}:$tag \
-              ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:$tag
+          # Execute the script to fetch the tags
+          tags=$(./scripts/${{ matrix.image }}.sh)
+
+          # Mirror the images
+          for tag in $tags; do
+            crane copy ${{ matrix.repo }}/${{ matrix.image }}:$tag ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:$tag
           done
